@@ -1381,9 +1381,44 @@ public final class PainlessLookupBuilder {
             } else if (javaMethods.size() == 1) {
                 java.lang.reflect.Method javaMethod = javaMethods.get(0);
                 String painlessMethodKey = buildPainlessMethodKey(javaMethod.getName(), javaMethod.getParameterCount());
-                painlessClassBuilder.functionalInterfaceMethod = painlessClassBuilder.methods.get(painlessMethodKey);
+                painlessClassBuilder.functionalInterfaceMethod =
+                        lookupFunctionalInterfaceMethod(targetClass, painlessClassBuilder, painlessMethodKey);
             }
         }
+    }
+
+    private PainlessMethod lookupFunctionalInterfaceMethod(
+            Class<?> targetClass,
+            PainlessClassBuilder painlessClassBuilder,
+            String painlessMethodKey) {
+        PainlessMethod painlessMethod = painlessClassBuilder.methods.get(painlessMethodKey);
+
+        if (painlessMethod != null) {
+            return painlessMethod;
+        }
+
+        Set<Class<?>> resolvedInterfaces = new HashSet<>();
+        List<Class<?>> targetInterfaces = new ArrayList<>(Arrays.asList(targetClass.getInterfaces()));
+
+        while (targetInterfaces.isEmpty() == false) {
+            Class<?> targetInterface = targetInterfaces.remove(0);
+
+            if (resolvedInterfaces.add(targetInterface)) {
+                PainlessClassBuilder interfaceBuilder = classesToPainlessClassBuilders.get(targetInterface);
+
+                if (interfaceBuilder != null) {
+                    painlessMethod = interfaceBuilder.methods.get(painlessMethodKey);
+
+                    if (painlessMethod != null) {
+                        return painlessMethod;
+                    }
+                }
+
+                targetInterfaces.addAll(Arrays.asList(targetInterface.getInterfaces()));
+            }
+        }
+
+        return null;
     }
 
     /**
