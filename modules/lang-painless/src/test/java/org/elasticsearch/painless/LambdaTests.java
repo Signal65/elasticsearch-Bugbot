@@ -36,6 +36,10 @@ public class LambdaTests extends ScriptTestCase {
 
     }
 
+    public void testLambdaWithInheritedFunctionalInterfaceMethod() {
+        assertEquals(3, exec("BinaryOperator op = (a, b) -> a + b; return op.apply(1, 2);"));
+    }
+
     public void testPrimitiveLambdas() {
         assertEquals(4, exec("List l = new ArrayList(); l.add(1); l.add(1); "
                            + "return l.stream().mapToInt(x -> x + 1).sum();"));
